@@ -51,12 +51,8 @@ module Associatable
   # Phase IIIb
   def belongs_to(name, options = {})
     options = BelongsToOptions.new(name, options)
-    
-    assoc_options.merge(
-      foreign_key: options.foreign_key,
-      primary_key: options.primary_key,
-      class_name: options.class_name
-    )
+
+    assoc_options[name] = options
 
     define_method(name) do
       foreign_key = send(options.foreign_key)
