@@ -11,11 +11,11 @@ class AssocOptions
   )
 
   def model_class
-    # ...
+    Object.const_get(class_name)
   end
 
   def table_name
-    # ...
+    class_name.underscore + 's'
   end
 end
 
