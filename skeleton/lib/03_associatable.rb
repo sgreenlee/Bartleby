@@ -11,7 +11,7 @@ class AssocOptions
   )
 
   def model_class
-    Object.const_get(class_name)
+    class_name.constantize
   end
 
   def table_name
