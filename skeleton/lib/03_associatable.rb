@@ -50,7 +50,14 @@ end
 module Associatable
   # Phase IIIb
   def belongs_to(name, options = {})
-    # ...
+    options = BelongsToOptions.new(name, options)
+
+    define_method(name) do
+      foreign_key = send(options.foreign_key)
+      target_class = options.model_class
+      conditions = {options.primary_key => foreign_key}
+      target_class.where(conditions).first
+    end
   end
 
   def has_many(name, options = {})
@@ -64,4 +71,5 @@ end
 
 class SQLObject
   # Mixin Associatable here...
+  extend Associatable
 end
