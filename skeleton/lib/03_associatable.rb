@@ -1,3 +1,4 @@
+require "byebug"
 require_relative '02_searchable'
 require 'active_support/inflector'
 
@@ -20,7 +21,16 @@ end
 
 class BelongsToOptions < AssocOptions
   def initialize(name, options = {})
-    # ...
+    # debugger
+    defaults = {
+      foreign_key: "#{name}_id".to_sym,
+      primary_key: :id,
+      class_name: name.to_s.singularize.capitalize
+    }
+
+    self.foreign_key = options[:foreign_key] || defaults[:foreign_key]
+    self.primary_key = options[:primary_key] || defaults[:primary_key]
+    self.class_name =  options[:class_name]  || defaults[:class_name]
   end
 end
 
