@@ -5,7 +5,7 @@ require 'active_support/inflector'
 
 class SQLObject
   def self.columns
-    return @columns if @columns
+    return @columns.dup if @columns
     # ...
     @columns = DBConnection.execute2(<<-SQL).first.map(&:to_sym)
       SELECT
@@ -13,6 +13,7 @@ class SQLObject
       FROM
         '#{table_name}'
     SQL
+    @columns.dup
   end
 
   def self.finalize!
@@ -77,11 +78,27 @@ class SQLObject
   end
 
   def attribute_values
-    # ...
+    self.class.columns.map { |col| send(col) }
   end
 
   def insert
-    # ...
+    cols = self.class.columns
+    cols.delete(:id)
+    col_names = cols.join(", ")
+    question_marks = (["?"] * (self.class.columns.count  - 1)).join(", ")
+    id_idx = self.class.columns.index(:id)
+    values = attribute_values
+    values.delete_at(id_idx)
+
+    query_string = <<-SQL
+      INSERT INTO
+        #{self.class.table_name} (#{col_names})
+      VALUES
+        (#{question_marks})
+    SQL
+
+    DBConnection.execute(query_string, *values)
+    self.id = DBConnection.last_insert_row_id
   end
 
   def update
