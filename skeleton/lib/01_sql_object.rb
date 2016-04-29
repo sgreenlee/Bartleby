@@ -102,7 +102,20 @@ class SQLObject
   end
 
   def update
-    # ...
+    cols = self.class.columns
+    cols.delete(:id)
+    set_string = cols.map { |col| "#{col} = :#{col}"}.join(", ")
+
+    query_string = <<-SQL
+      UPDATE
+        #{self.class.table_name}
+      SET
+        #{set_string}
+      WHERE
+        id = :id
+    SQL
+
+    DBConnection.execute(query_string, attributes)
   end
 
   def save
