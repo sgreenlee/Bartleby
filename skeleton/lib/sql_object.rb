@@ -1,9 +1,12 @@
 require_relative 'db_connection'
+require_relative 'searchable'
+require_relative 'associatable'
 require 'active_support/inflector'
-# NB: the attr_accessor we wrote in phase 0 is NOT used in the rest
-# of this project. It was only a warm up.
 
 class SQLObject
+  extend Associatable
+  extend Searchable
+
   def self.columns
     return @columns.dup if @columns
     # ...

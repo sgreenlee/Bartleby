@@ -78,8 +78,8 @@ class Relation
     @cache.each(&prc)
   end
 
-  def load(force = false)
-    @cache = query_results if force || @cache.nil?
+  def load
+    @cache = query_results
   end
 
   def parse(results)
