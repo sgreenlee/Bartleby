@@ -1,7 +1,7 @@
 describe 'AssocOptions' do
-  describe 'BelongsToOptions' do
+  describe 'Bartleby::BelongsToOptions' do
     it 'provides defaults' do
-      options = BelongsToOptions.new('house')
+      options = Bartleby::BelongsToOptions.new('house')
 
       expect(options.foreign_key).to eq(:house_id)
       expect(options.class_name).to eq('House')
@@ -9,7 +9,7 @@ describe 'AssocOptions' do
     end
 
     it 'allows overrides' do
-      options = BelongsToOptions.new('owner',
+      options = Bartleby::BelongsToOptions.new('owner',
                                      foreign_key: :human_id,
                                      class_name: 'Human',
                                      primary_key: :human_id
@@ -21,9 +21,9 @@ describe 'AssocOptions' do
     end
   end
 
-  describe 'HasManyOptions' do
+  describe 'Bartleby::HasManyOptions' do
     it 'provides defaults' do
-      options = HasManyOptions.new('cats', 'Human')
+      options = Bartleby::HasManyOptions.new('cats', 'Human')
 
       expect(options.foreign_key).to eq(:human_id)
       expect(options.class_name).to eq('Cat')
@@ -31,7 +31,7 @@ describe 'AssocOptions' do
     end
 
     it 'allows overrides' do
-      options = HasManyOptions.new('cats', 'Human',
+      options = Bartleby::HasManyOptions.new('cats', 'Human',
                                    foreign_key: :owner_id,
                                    class_name: 'Kitten',
                                    primary_key: :human_id
@@ -51,38 +51,36 @@ describe 'AssocOptions' do
 
       class Human < Bartleby::Objectifier
         self.table_name = 'humans'
-
         self.finalize!
       end
     end
 
     it '#model_class returns class of associated object' do
-      options = BelongsToOptions.new('human')
+      options = Bartleby::BelongsToOptions.new('human')
       expect(options.model_class).to eq(Human)
 
-      options = HasManyOptions.new('cats', 'Human')
+      options = Bartleby::HasManyOptions.new('cats', 'Human')
       expect(options.model_class).to eq(Cat)
     end
 
     it '#table_name returns table name of associated object' do
-      options = BelongsToOptions.new('human')
+      options = Bartleby::BelongsToOptions.new('human')
       expect(options.table_name).to eq('humans')
 
-      options = HasManyOptions.new('cats', 'Human')
+      options = Bartleby::HasManyOptions.new('cats', 'Human')
       expect(options.table_name).to eq('cats')
     end
   end
 end
 
 describe 'Associatable' do
-  before(:each) { Connection.reset }
-  after(:each) { Connection.reset }
+  before(:each) { Bartleby::Connection.reset }
+  after(:each) { Bartleby::Connection.reset }
 
   before(:all) do
     class Cat < Bartleby::Objectifier
       belongs_to :human, foreign_key: :owner_id
-
-      finalize!
+      self.finalize!
     end
 
     class Human < Bartleby::Objectifier
@@ -91,13 +89,12 @@ describe 'Associatable' do
       has_many :cats, foreign_key: :owner_id
       belongs_to :house
 
-      finalize!
+      self.finalize!
     end
 
     class House < Bartleby::Objectifier
       has_many :humans
-
-      finalize!
+      self.finalize!
     end
   end
 
@@ -173,7 +170,7 @@ describe 'Associatable' do
       cat_assoc_options = Cat.assoc_options
       human_options = cat_assoc_options[:human]
 
-      expect(human_options).to be_instance_of(BelongsToOptions)
+      expect(human_options).to be_instance_of(Bartleby::BelongsToOptions)
       expect(human_options.foreign_key).to eq(:owner_id)
       expect(human_options.class_name).to eq('Human')
       expect(human_options.primary_key).to eq(:id)
@@ -192,7 +189,6 @@ describe 'Associatable' do
     before(:all) do
       class Cat
         has_one_through :home, :human, :house
-
         self.finalize!
       end
     end

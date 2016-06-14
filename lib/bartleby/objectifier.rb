@@ -8,35 +8,11 @@ module Bartleby
     extend Associatable
     extend Searchable
 
-    def self.columns
-      return @columns.dup if @columns
-      # ...
-      @columns = Connection.execute2(<<-SQL).first.map(&:to_sym)
-        SELECT
-          *
-        FROM
-          '#{table_name}'
-      SQL
-      @columns.dup
-    end
-
-    def self.inherited(child_class)
-      child_class.finalize!
-    end
-
-    def self.finalize!
-      columns.each do |column|
-        create_getter!(column)
-        create_setter!(column)
+    def initialize(params = {})
+      params.each do |attr_name, value|
+        raise "unknown attribute '#{attr_name}'" unless valid_attribute? attr_name
+        send("#{attr_name}=".to_sym, value)
       end
-    end
-
-    def self.table_name=(table_name)
-      @table_name = table_name
-    end
-
-    def self.table_name
-      @table_name || self.name.tableize
     end
 
     def self.all
@@ -50,10 +26,6 @@ module Bartleby
       parse_all(results)
     end
 
-    def self.parse_all(results)
-      results.map { |result| self.new(result) }
-    end
-
     def self.find(id)
       result = Connection.execute(<<-SQL, id)
         SELECT
@@ -65,21 +37,6 @@ module Bartleby
       SQL
 
       result.empty? ? nil : self.new(result.first)
-    end
-
-    def initialize(params = {})
-      params.each do |attr_name, value|
-        raise "unknown attribute '#{attr_name}'" unless valid_attribute? attr_name
-        send("#{attr_name}=".to_sym, value)
-      end
-    end
-
-    def attributes
-      @attributes ||= {}
-    end
-
-    def attribute_values
-      self.class.columns.map { |col| send(col) }
     end
 
     def insert
@@ -124,6 +81,45 @@ module Bartleby
     end
 
     private
+
+    def self.columns
+      return @columns.dup if @columns
+      # ...
+      @columns = Connection.execute2(<<-SQL).first.map(&:to_sym)
+      SELECT
+      *
+      FROM
+      '#{table_name}'
+      SQL
+      @columns.dup
+    end
+
+    def self.finalize!
+      columns.each do |column|
+        create_getter!(column)
+        create_setter!(column)
+      end
+    end
+
+    def self.table_name=(table_name)
+      @table_name = table_name
+    end
+
+    def self.table_name
+      @table_name || self.name.tableize
+    end
+
+    def self.parse_all(results)
+      results.map { |result| self.new(result) }
+    end
+
+    def attributes
+      @attributes ||= {}
+    end
+
+    def attribute_values
+      self.class.columns.map { |col| send(col) }
+    end
 
     def self.create_getter!(column)
       define_method(column) do
