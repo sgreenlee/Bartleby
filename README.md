@@ -1,8 +1,6 @@
 # Bartleby
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/bartleby`. To experiment with that code, run `bin/console` for an interactive prompt.
-
-TODO: Delete this and the text above, and describe your gem
+Bartleby is a lightweight Object-Relational mapping tool for sqlite3 databases that reproduces some of the core functionality of ActiveRecord.
 
 ## Installation
 
@@ -22,18 +20,56 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+Bartleby is very easy to set up. First, require the gem:
 
-## Development
+```ruby
+require 'bartleby'
+```
 
-After checking out the repo, run `bin/setup` to install dependencies. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+Next, configure Bartleby with the path to your sqlite3 database and a file that defines its schema and loads any seed data.
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+```ruby
+Bartleby.configure do |config|
+  config.db_file = "PATH/TO/DB/FILE"
+  config.seed_file = "PATH/TO/SEED/FILE"
+end
+```
+
+You're now ready to start creating models with Bartleby! Just subclass Bartleby::Objectifier, making sure to call the ::finalize! method before the end of the model definition.
+
+```ruby
+class Cat < Bartleby::Objectifier
+  belongs_to :owner
+  has_many :feeders
+
+  finalize!
+end
+```
+
+
+## API
+
+All subclasses of `Bartleby::Objectifier` expose the following methods, which will be familiar to any user of ActiveRecord:
+
+#### Core ORM Methods
+
+* `::all`
+* `::where`
+* `::find`
+* `::insert`
+* `#save`
+* `#update`
+
+#### Associations
+
+* `::has_many`
+* `::belongs_to`
+* `::has_one_through`
+
 
 ## Contributing
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/sgreenlee/bartleby.
-
 
 ## License
 

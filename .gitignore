@@ -1,1 +1,4 @@
 .DS_STORE
+*.gem
+.byebug_history
+Gemfile.lock
