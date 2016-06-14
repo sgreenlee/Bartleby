@@ -1,13 +1,13 @@
 require 'sql_object'
 require 'securerandom'
 
-describe SQLObject do
-  before(:each) { DBConnection.reset }
-  after(:each) { DBConnection.reset }
+describe Bartleby::Objectifier do
+  before(:each) { Connection.reset }
+  after(:each) { Connection.reset }
 
   context 'before ::finalize!' do
     before(:each) do
-      class Cat < SQLObject
+      class Cat < Bartleby::Objectifier
       end
     end
 
@@ -23,7 +23,7 @@ describe SQLObject do
 
     describe '::table_name=' do
       it 'sets table name' do
-        class Human < SQLObject
+        class Human < Bartleby::Objectifier
           self.table_name = 'humans'
         end
 
@@ -39,7 +39,7 @@ describe SQLObject do
       end
 
       it 'only queries the DB once' do
-        expect(DBConnection).to(
+        expect(Connection).to(
           receive(:execute2).exactly(1).times.and_call_original)
         3.times { Cat.columns }
       end
@@ -66,11 +66,11 @@ describe SQLObject do
 
   context 'after ::finalize!' do
     before(:all) do
-      class Cat < SQLObject
+      class Cat < Bartleby::Objectifier
         self.finalize!
       end
 
-      class Human < SQLObject
+      class Human < Bartleby::Objectifier
         self.table_name = 'humans'
 
         self.finalize!
@@ -195,7 +195,7 @@ describe SQLObject do
       end
 
       it 'sets the id once the new record is saved' do
-        expect(cat.id).to eq(DBConnection.last_insert_row_id)
+        expect(cat.id).to eq(Connection.last_insert_row_id)
       end
 
       it 'creates a new record with the correct values' do

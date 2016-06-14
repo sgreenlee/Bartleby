@@ -1,15 +1,15 @@
 require 'sql_object'
 
 describe 'Searchable' do
-  before(:each) { DBConnection.reset }
-  after(:each) { DBConnection.reset }
+  before(:each) { Connection.reset }
+  after(:each) { Connection.reset }
 
   before(:all) do
-    class Cat < SQLObject
+    class Cat < Bartleby::Objectifier
       finalize!
     end
 
-    class Human < SQLObject
+    class Human < Bartleby::Objectifier
       self.table_name = 'humans'
 
       finalize!
