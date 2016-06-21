@@ -1,7 +1,7 @@
 require 'active_support/inflector'
 
 module Bartleby
-  
+
   class AssocOptions
     attr_accessor(
       :foreign_key,
@@ -14,7 +14,7 @@ module Bartleby
     end
 
     def table_name
-      class_name.underscore + 's'
+      class_name.constantize.table_name
     end
   end
 

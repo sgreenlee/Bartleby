@@ -1,74 +1,74 @@
 describe 'AssocOptions' do
   describe 'Bartleby::BelongsToOptions' do
     it 'provides defaults' do
-      options = Bartleby::BelongsToOptions.new('house')
+      options = Bartleby::BelongsToOptions.new('company')
 
-      expect(options.foreign_key).to eq(:house_id)
-      expect(options.class_name).to eq('House')
+      expect(options.foreign_key).to eq(:company_id)
+      expect(options.class_name).to eq('Company')
       expect(options.primary_key).to eq(:id)
     end
 
     it 'allows overrides' do
-      options = Bartleby::BelongsToOptions.new('owner',
-                                     foreign_key: :human_id,
-                                     class_name: 'Human',
-                                     primary_key: :human_id
+      options = Bartleby::BelongsToOptions.new('manager',
+                                     foreign_key: :manager_id,
+                                     class_name: 'Manager',
+                                     primary_key: :manager_id
       )
 
-      expect(options.foreign_key).to eq(:human_id)
-      expect(options.class_name).to eq('Human')
-      expect(options.primary_key).to eq(:human_id)
+      expect(options.foreign_key).to eq(:manager_id)
+      expect(options.class_name).to eq('Manager')
+      expect(options.primary_key).to eq(:manager_id)
     end
   end
 
   describe 'Bartleby::HasManyOptions' do
     it 'provides defaults' do
-      options = Bartleby::HasManyOptions.new('cats', 'Human')
+      options = Bartleby::HasManyOptions.new('employees', 'Manager')
 
-      expect(options.foreign_key).to eq(:human_id)
-      expect(options.class_name).to eq('Cat')
+      expect(options.foreign_key).to eq(:manager_id)
+      expect(options.class_name).to eq('Employee')
       expect(options.primary_key).to eq(:id)
     end
 
     it 'allows overrides' do
-      options = Bartleby::HasManyOptions.new('cats', 'Human',
-                                   foreign_key: :owner_id,
-                                   class_name: 'Kitten',
-                                   primary_key: :human_id
+      options = Bartleby::HasManyOptions.new('employees', 'Manager',
+                                   foreign_key: :manager_id,
+                                   class_name: 'Donut',
+                                   primary_key: :manager_id
       )
 
-      expect(options.foreign_key).to eq(:owner_id)
-      expect(options.class_name).to eq('Kitten')
-      expect(options.primary_key).to eq(:human_id)
+      expect(options.foreign_key).to eq(:manager_id)
+      expect(options.class_name).to eq('Donut')
+      expect(options.primary_key).to eq(:manager_id)
     end
   end
 
   describe 'AssocOptions' do
     before(:all) do
-      class Cat < Bartleby::Objectifier
+      class Employee < Bartleby::Objectifier
         self.finalize!
       end
 
-      class Human < Bartleby::Objectifier
-        self.table_name = 'humans'
+      class Manager < Bartleby::Objectifier
+        self.table_name = 'managers'
         self.finalize!
       end
     end
 
     it '#model_class returns class of associated object' do
-      options = Bartleby::BelongsToOptions.new('human')
-      expect(options.model_class).to eq(Human)
+      options = Bartleby::BelongsToOptions.new('manager')
+      expect(options.model_class).to eq(Manager)
 
-      options = Bartleby::HasManyOptions.new('cats', 'Human')
-      expect(options.model_class).to eq(Cat)
+      options = Bartleby::HasManyOptions.new('employees', 'Manager')
+      expect(options.model_class).to eq(Employee)
     end
 
     it '#table_name returns table name of associated object' do
-      options = Bartleby::BelongsToOptions.new('human')
-      expect(options.table_name).to eq('humans')
+      options = Bartleby::BelongsToOptions.new('manager')
+      expect(options.table_name).to eq('managers')
 
-      options = Bartleby::HasManyOptions.new('cats', 'Human')
-      expect(options.table_name).to eq('cats')
+      options = Bartleby::HasManyOptions.new('employees', 'Manager')
+      expect(options.table_name).to eq('employees')
     end
   end
 end
@@ -78,83 +78,84 @@ describe 'Associatable' do
   after(:each) { Bartleby::Connection.reset }
 
   before(:all) do
-    class Cat < Bartleby::Objectifier
-      belongs_to :human, foreign_key: :owner_id
+    class Employee < Bartleby::Objectifier
+      belongs_to :manager, foreign_key: :manager_id
       self.finalize!
     end
 
-    class Human < Bartleby::Objectifier
-      self.table_name = 'humans'
+    class Manager < Bartleby::Objectifier
+      self.table_name = 'managers'
 
-      has_many :cats, foreign_key: :owner_id
-      belongs_to :house
+      has_many :employees, foreign_key: :manager_id
+      belongs_to :company, class_name: "Company"
 
       self.finalize!
     end
 
-    class House < Bartleby::Objectifier
-      has_many :humans
+    class Company < Bartleby::Objectifier
+      self.table_name = "companies"
+      has_many :managers
       self.finalize!
     end
   end
 
   describe '#belongs_to' do
-    let(:breakfast) { Cat.find(1) }
-    let(:devon) { Human.find(1) }
+    let(:john) { Employee.find(1) }
+    let(:peter) { Manager.find(1) }
 
-    it 'fetches `human` from `Cat` correctly' do
-      expect(breakfast).to respond_to(:human)
-      human = breakfast.human
+    it 'fetches `manager` from `Employee` correctly' do
+      expect(john).to respond_to(:manager)
+      manager = john.manager
 
-      expect(human).to be_instance_of(Human)
-      expect(human.fname).to eq('Devon')
+      expect(manager).to be_instance_of(Manager)
+      expect(manager.fname).to eq('Peter')
     end
 
-    it 'fetches `house` from `Human` correctly' do
-      expect(devon).to respond_to(:house)
-      house = devon.house
+    it 'fetches `company` from `Manager` correctly' do
+      expect(peter).to respond_to(:company)
+      company = peter.company
 
-      expect(house).to be_instance_of(House)
-      expect(house.address).to eq('26th and Guerrero')
+      expect(company).to be_instance_of(Company)
+      expect(company.name).to eq('ACME')
     end
 
     it 'returns nil if no associated object' do
-      stray_cat = Cat.find(5)
-      expect(stray_cat.human).to eq(nil)
+      stray_employee = Employee.find(5)
+      expect(stray_employee.manager).to eq(nil)
     end
   end
 
   describe '#has_many' do
-    let(:ned) { Human.find(3) }
-    let(:ned_house) { House.find(2) }
+    let(:adam) { Manager.find(3) }
+    let(:adam_company) { Company.find(2) }
 
-    it 'fetches `cats` from `Human`' do
-      expect(ned).to respond_to(:cats)
-      cats = ned.cats
+    it 'fetches `employees` from `Manager`' do
+      expect(adam).to respond_to(:employees)
+      employees = adam.employees
 
-      expect(cats.length).to eq(2)
+      expect(employees.length).to eq(2)
 
-      expected_cat_names = %w(Haskell Markov)
+      expected_employee_names = ["James Garfield",  "Otto Von Bismark"]
       2.times do |i|
-        cat = cats[i]
+        employee = employees[i]
 
-        expect(cat).to be_instance_of(Cat)
-        expect(cat.name).to eq(expected_cat_names[i])
+        expect(employee).to be_instance_of(Employee)
+        expect(employee.name).to eq(expected_employee_names[i])
       end
     end
 
-    it 'fetches `humans` from `House`' do
-      expect(ned_house).to respond_to(:humans)
-      humans = ned_house.humans
+    it 'fetches `managers` from `Company`' do
+      expect(adam_company).to respond_to(:managers)
+      managers = adam_company.managers
 
-      expect(humans.length).to eq(1)
-      expect(humans[0]).to be_instance_of(Human)
-      expect(humans[0].fname).to eq('Ned')
+      expect(managers.length).to eq(1)
+      expect(managers[0]).to be_instance_of(Manager)
+      expect(managers[0].fname).to eq('Adam')
     end
 
     it 'returns an empty array if no associated items' do
-      catless_human = Human.find(4)
-      expect(catless_human.cats).to eq([])
+      employeeless_manager = Manager.find(4)
+      expect(employeeless_manager.employees).to eq([])
     end
   end
 
@@ -167,43 +168,43 @@ describe 'Associatable' do
     end
 
     it 'stores `belongs_to` options' do
-      cat_assoc_options = Cat.assoc_options
-      human_options = cat_assoc_options[:human]
+      employee_assoc_options = Employee.assoc_options
+      manager_options = employee_assoc_options[:manager]
 
-      expect(human_options).to be_instance_of(Bartleby::BelongsToOptions)
-      expect(human_options.foreign_key).to eq(:owner_id)
-      expect(human_options.class_name).to eq('Human')
-      expect(human_options.primary_key).to eq(:id)
+      expect(manager_options).to be_instance_of(Bartleby::BelongsToOptions)
+      expect(manager_options.foreign_key).to eq(:manager_id)
+      expect(manager_options.class_name).to eq('Manager')
+      expect(manager_options.primary_key).to eq(:id)
     end
 
     it 'stores options separately for each class' do
-      expect(Cat.assoc_options).to have_key(:human)
-      expect(Human.assoc_options).to_not have_key(:human)
+      expect(Employee.assoc_options).to have_key(:manager)
+      expect(Manager.assoc_options).to_not have_key(:manager)
 
-      expect(Human.assoc_options).to have_key(:house)
-      expect(Cat.assoc_options).to_not have_key(:house)
+      expect(Manager.assoc_options).to have_key(:company)
+      expect(Employee.assoc_options).to_not have_key(:company)
     end
   end
 
   describe '#has_one_through' do
     before(:all) do
-      class Cat
-        has_one_through :home, :human, :house
+      class Employee
+        has_one_through :company, :manager, :company
         self.finalize!
       end
     end
 
-    let(:cat) { Cat.find(1) }
+    let(:employee) { Employee.find(1) }
 
     it 'adds getter method' do
-      expect(cat).to respond_to(:home)
+      expect(employee).to respond_to(:company)
     end
 
-    it 'fetches associated `home` for a `Cat`' do
-      house = cat.home
+    it 'fetches associated `company` for a `Employee`' do
+      company = employee.company
 
-      expect(house).to be_instance_of(House)
-      expect(house.address).to eq('26th and Guerrero')
+      expect(company).to be_instance_of(Company)
+      expect(company.name).to eq('ACME')
     end
   end
 end
